@@ -27,27 +27,27 @@ jobs:
 
               case "${git_branch}" in
                   "main" | "master" )
-                      branch_tag="${GITHUB_REPOSITORY}:latest"
+                      branch_tag="${GITHUB_REPOSITORY,,}:latest"
                   ;;
                   "develop" )
-                      branch_tag="${GITHUB_REPOSITORY}:develop"
+                      branch_tag="${GITHUB_REPOSITORY,,}:develop"
                   ;;
                   * )
                       if [ -n "${{ vars.LATEST }}" ]; then
                           if [ "${{ vars.LATEST }}" = "${branch_tag}" ] || [ "${{ vars.LATEST }}" = "TRUE" ] ; then
-                              branch_tag="${GITHUB_REPOSITORY}:${git_branch},${GITHUB_REPOSITORY}:${git_branch}-latest,${GITHUB_REPOSITORY}:latest"
+                              branch_tag="${GITHUB_REPOSITORY,,}:${git_branch},${GITHUB_REPOSITORY,,}:${git_branch}-latest,${GITHUB_REPOSITORY,,}:latest"
                           else
-                              branch_tag="${GITHUB_REPOSITORY}:${git_branch},${GITHUB_REPOSITORY}:${git_branch}-latest"
+                              branch_tag="${GITHUB_REPOSITORY,,}:${git_branch},${GITHUB_REPOSITORY,,}:${git_branch}-latest"
                           fi
                       else
-                          branch_tag="${GITHUB_REPOSITORY}:${git_branch},${GITHUB_REPOSITORY}:${git_branch}-latest"
+                          branch_tag="${GITHUB_REPOSITORY,,}:${git_branch},${GITHUB_REPOSITORY,,}:${git_branch}-latest"
                       fi
                   ;;
               esac
           fi
 
           if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-              git_tag="${GITHUB_REPOSITORY}:$(echo ${GITHUB_REF} | sed 's|refs/tags/||g')"
+              git_tag="${GITHUB_REPOSITORY,,}:$(echo ${GITHUB_REF} | sed 's|refs/tags/||g')"
           fi
 
           if [ -n "${branch_tag}" ] && [ -n "${git_tag}" ]; then
@@ -57,19 +57,19 @@ jobs:
           fi
 
           echo "dockerhub_repo=${GITHUB_REPOSITORY/docker-/}" >> $GITHUB_ENV
-          dockerhub_images=$(echo "${image_tags}" | sed "s|${GITHUB_REPOSITORY}|docker.io/${GITHUB_REPOSITORY/docker-/}|g")
-          ghcr_images=$(echo "${image_tags}" | sed "s|${GITHUB_REPOSITORY}|ghcr.io/${GITHUB_REPOSITORY}|g")
+          dockerhub_images=$(echo "${image_tags}" | sed "s|${GITHUB_REPOSITORY,,}|docker.io/${GITHUB_REPOSITORY/docker-/}|g")
+          ghcr_images=$(echo "${image_tags}" | sed "s|${GITHUB_REPOSITORY,,}|ghcr.io/${GITHUB_REPOSITORY,,}|g")
           echo "container_images=${dockerhub_images},${ghcr_images}" >> $GITHUB_OUTPUT
       - name: Label
         id: Label
         run: |
           image_name=${GITHUB_REPOSITORY/docker-/}
           if [ -f "${{ env.build_file }}" ] ; then
-              sed -i "/FROM .*/a LABEL tiredofit.${image_name}.git_repository=\"https://github.com/${GITHUB_REPOSITORY}\"" ${{ env.build_file }}
+              sed -i "/FROM .*/a LABEL tiredofit.${image_name}.git_repository=\"https://github.com/${GITHUB_REPOSITORY,,}\"" ${{ env.build_file }}
               sed -i "/FROM .*/a LABEL tiredofit.${image_name}.git_commit=\"${GITHUB_SHA}\"" ${{ env.build_file }}
               sed -i "/FROM .*/a LABEL tiredofit.${image_name}.git_committed_by=\"${GITHUB_ACTOR}\"" ${{ env.build_file }}
               sed -i "/FROM .*/a LABEL tiredofit.${image_name}.image_build_date=\"$(date +'%Y-%m-%d %H:%M:%S')\"" ${{ env.build_file }}
-              sed -i "/FROM .*/a LABEL org.opencontainers.image.source https://github.com/${GITHUB_REPOSITORY}"  ${{ env.build_file }}
+              sed -i "/FROM .*/a LABEL org.opencontainers.image.source https://github.com/${GITHUB_REPOSITORY,,}"  ${{ env.build_file }}
 
               if [ -f "CHANGELOG.md" ] ; then
                 sed -i "/FROM .*/a LABEL tiredofit.${image_name}.git_changelog_version=\"$(head -n1 ./CHANGELOG.md | awk '{print $2}')\"" ${{ env.build_file }}
